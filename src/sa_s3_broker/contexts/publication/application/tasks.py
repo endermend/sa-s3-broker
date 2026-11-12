@@ -20,7 +20,7 @@ logger = structlog.stdlib.get_logger()
 
 @inject
 async def check_expiration_task(
-    ctx: dict,  # Контекст ARQ, обязателен
+    ctx: dict,
     publication_id_value: UUID,
     is_public: bool,
     publication_repo: FromDishka[IPublicationRepository],
@@ -33,13 +33,16 @@ async def check_expiration_task(
         return
         
     logger.info("task.started", publication_id=publication_id_value, created_at=publication.created_at)
+
+    did_saved = await bucket.check(publication)
     
-    if await bucket.check(publication):
+    if did_saved:
         publication.set_status(
             PublicationStatus.PUBLIC if is_public else PublicationStatus.PRIVATE
         )
         await publication_repo.save(publication)
-    else:
-        await publication_repo.delete_publication(publication.id)
+    elif not await publication_repo.delete_publication(publication.id):
+        logger.error("task.failed", reason="publication has not been deleted.")
+        return
         
-    logger.info("task.finished", publication_id=publication_id_value)
+    logger.info("task.finished", publication_id=publication_id_value, did_saved=did_saved)

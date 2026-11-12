@@ -90,4 +90,5 @@ class PublicationRepository(IPublicationRepository):
         if publication_orm is None:
             return False
         await self._session.delete(publication_orm)
+        await self._session.commit()
         return True

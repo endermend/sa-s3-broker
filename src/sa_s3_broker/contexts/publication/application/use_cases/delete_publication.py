@@ -23,6 +23,7 @@ from sa_s3_broker.contexts.publication.domain.repositories.topic_repository impo
 from sa_s3_broker.contexts.publication.domain.value_objects.publication_id import (
     PublicationID,
 )
+from sa_s3_broker.shared.domain.exceptions import DomainError
 
 logger = structlog.stdlib.get_logger()
 
@@ -75,4 +76,6 @@ class DeletePublicationUseCase:
             raise InvalidCredentialsError
 
         await self._bucket_service.delete(publication)
-        await self._publication_repo.delete_publication(publication.id)
+        if not await self._publication_repo.delete_publication(publication.id):
+            logger.error("publ.delete.failed", reason="publication has not been deleted.")
+            raise DomainError
