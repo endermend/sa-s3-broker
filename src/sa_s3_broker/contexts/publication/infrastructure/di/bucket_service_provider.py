@@ -35,10 +35,6 @@ class BucketServiceProvider(Provider):
             s3={"addressing_style": "path"},
         )
 
-        print(f"AK: {config.S3.AWS_ACCESS_KEY!r}")
-        print(f"SK length: {len(config.S3.SECRET_KEY)}")
-        print(f"Endpoint: {config.S3.ENDPOINT}")
-
         return boto3.client(
             "s3",
             endpoint_url=config.S3.ENDPOINT,

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import structlog
 from pydantic import HttpUrl
 
@@ -74,10 +76,7 @@ class GetPublicationsUseCase:
             await self._topic_repo.get_by_id(pub.topic_id) for pub in publications
         ]
 
-        links = [
-            await self._bucket_service.presigned_get(pub)
-            for pub in publications
-        ]
+        links = [await self._bucket_service.presigned_get(pub) for pub in publications]
 
         return [
             PublicationViewDTO(
@@ -86,7 +85,7 @@ class GetPublicationsUseCase:
                 name=pub.name,
                 status=pub.status.to_str(),
                 url=HttpUrl(link[0]),
-                expires_at=link[1],
+                expires_at=datetime.now(UTC) + link[1],
             )
             for top, pub, link in zip(topics, publications, links, strict=True)
         ]

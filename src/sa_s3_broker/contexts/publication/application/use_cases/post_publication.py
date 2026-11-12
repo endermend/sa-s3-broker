@@ -1,8 +1,8 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import structlog
+from arq import ArqRedis
 from pydantic import HttpUrl
-from rq import Queue
 
 from sa_s3_broker.contexts.publication.application.dtos import LinkDTO, PublicationDTO
 from sa_s3_broker.contexts.publication.application.exceptions import (
@@ -14,7 +14,6 @@ from sa_s3_broker.contexts.publication.application.interfaces.bucket_service imp
 from sa_s3_broker.contexts.publication.application.interfaces.password_hasher import (
     IPasswordHasher,
 )
-from sa_s3_broker.contexts.publication.application.tasks import check_expiration_task
 from sa_s3_broker.contexts.publication.domain.entities.publication import (
     Publication,
 )
@@ -44,14 +43,14 @@ class PostPublicationUseCase:
         publication_repo: IPublicationRepository,
         password_hasher: IPasswordHasher,
         bucket_service: IBucketService,
-        queue: Queue,
+        arq_pool: ArqRedis,
     ) -> None:
         """Инициализирует use case публикации медиафайла в топике."""
         self._topic_repo = topic_repo
         self._publication_repo = publication_repo
         self._password_hasher = password_hasher
         self._bucket_service = bucket_service
-        self._queue = queue
+        self._arq_pool = arq_pool
 
     async def execute(self, input_dto: PublicationDTO) -> LinkDTO:
         """
@@ -83,12 +82,17 @@ class PostPublicationUseCase:
         )
         await self._publication_repo.save(publication)
 
-        url_link, expires_at = await self._bucket_service.presigned_put(publication)
+        url_link, expires_in = await self._bucket_service.presigned_put(publication)
 
-        self._queue.enqueue_at(expires_at + timedelta(minutes=1), check_expiration_task, publication.id.value, PublicationStatus(input_dto.status) == PublicationStatus.PUBLIC)
+        await self._arq_pool.enqueue_job(
+            "check_expiration_task",
+            publication.id.value,
+            PublicationStatus(input_dto.status) == PublicationStatus.PUBLIC,
+            _defer_by=expires_in + timedelta(minutes=1),
+        )
 
         return LinkDTO(
             id = publication.id.value,
             url = HttpUrl(url_link),
-            expires_at = expires_at,
+            expires_at = datetime.now(UTC) + expires_in,
         )

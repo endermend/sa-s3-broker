@@ -11,19 +11,18 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "boto3>=1.43.111",
     "dishka>=1.10.1",
-    "dishka-rq>=0.1.2",
     "fastapi>=0.162.2",
     "pydantic>=2.14.3",
     "pydantic-settings>=2.16.2",
     "python-dotenv>=1.2.4",
     "redis>=8.1.0",
     "requests>=2.34.2",
-    "rq>=3.0.0",
     "structlog>=26.1.0",
     "uvicorn>=0.54.0",
     "boto3-stubs[s3]>=1.43.111", #FIXME move to dev group
     "sqlalchemy[asyncio]>=2.1.8",
     "psycopg[binary]>=3.3.8",
+    "arq>=0.25.0",
 ]
 
 [project.scripts]

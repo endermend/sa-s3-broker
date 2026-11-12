@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import override
 
 from botocore.exceptions import ClientError
@@ -25,7 +25,7 @@ class BucketService(IBucketService):
         return f"topics/{publication.topic_id.value}/{publication.id.value}"
 
     @override
-    async def presigned_get(self, publication: Publication) -> tuple[str, datetime]:
+    async def presigned_get(self, publication: Publication) -> tuple[str, timedelta]:
         presigned_get_url = self._client.generate_presigned_url(
             "get_object",
             Params={
@@ -34,10 +34,10 @@ class BucketService(IBucketService):
             },
             ExpiresIn=self._config.S3.LIFESPAN + 30,
         )
-        return presigned_get_url, datetime.now(UTC) + timedelta(seconds=self._config.S3.LIFESPAN)
+        return presigned_get_url, timedelta(seconds=self._config.S3.LIFESPAN)
 
     @override
-    async def presigned_put(self, publication: Publication) -> tuple[str, datetime]:
+    async def presigned_put(self, publication: Publication) -> tuple[str, timedelta]:
         presigned_get_url = self._client.generate_presigned_url(
             "put_object",
             Params={
@@ -46,7 +46,7 @@ class BucketService(IBucketService):
             },
             ExpiresIn=self._config.S3.LIFESPAN + 30,
         )
-        return presigned_get_url, datetime.now(UTC) + timedelta(seconds=self._config.S3.LIFESPAN)
+        return presigned_get_url, timedelta(seconds=self._config.S3.LIFESPAN)
 
     @override
     async def delete(self, publication: Publication) -> None:

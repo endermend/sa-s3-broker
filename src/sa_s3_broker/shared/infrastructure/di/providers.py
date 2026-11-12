@@ -1,17 +1,17 @@
 from collections.abc import AsyncGenerator
 
+from arq import ArqRedis
 from dishka import (
     Provider,
     Scope,
     provide,
 )
-from redis.client import Redis
-from rq import Queue
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
 )
 
+from sa_s3_broker.infrastructure.arq import get_arq_pool
 from sa_s3_broker.infrastructure.config import Config
 from sa_s3_broker.shared.infrastructure.persistence.session import (
     new_async_session_maker,
@@ -49,34 +49,12 @@ class DBProvider(Provider):
             yield session
 
 class RQProvider(Provider):
-    """Провайдер для всего связанного с Redis."""
+    """Провайдер для всего связанного с Async requests."""
 
     @provide(scope=Scope.APP)
     @staticmethod
-    def get_redis(config: Config) -> Redis:
-        """
-        Провайдер для Redis.
+    def provide_arq_pool() -> ArqRedis:
+        return get_arq_pool()
 
-        Returns:
-            Redis
 
-        """
-        return Redis(
-            host=config.REDIS.HOST,
-            port=config.REDIS.PORT,
-            password=config.REDIS.PASSWORD,
-            decode_responses=True,
-        )
-
-    @provide(scope=Scope.APP)
-    @staticmethod
-    def get_queue(redis: Redis) -> Queue:
-        """
-        Провайдер для Redis.
-
-        Returns:
-            Redis
-
-        """
-        return Queue(connection=redis)
     
