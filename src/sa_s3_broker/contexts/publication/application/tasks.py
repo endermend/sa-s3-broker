@@ -1,6 +1,7 @@
 import asyncio
 from uuid import UUID
 
+import structlog
 from dishka import FromDishka
 from dishka_rq import inject
 
@@ -16,6 +17,8 @@ from sa_s3_broker.contexts.publication.domain.value_objects.publication_id impor
 from sa_s3_broker.contexts.publication.domain.value_objects.publication_status import (
     PublicationStatus,
 )
+
+logger = structlog.stdlib.get_logger()
 
 
 @inject
@@ -42,6 +45,8 @@ async def _check_expiration_async(
     publication = await publication_repo.get_by_id(publication_id)
     if publication is None or publication.status != PublicationStatus.PENDING:
         return
+    
+    logger.info("task.started", publication_id=publication_id_value, created_at=publication.created_at)
     if await bucket.check(publication):
         publication.set_status(
             PublicationStatus.PUBLIC if is_public else PublicationStatus.PRIVATE
@@ -49,3 +54,4 @@ async def _check_expiration_async(
         await publication_repo.save(publication)
     else:
         await publication_repo.delete_publication(publication.id)
+    logger.info("task.finished", publication_id=publication_id_value)
