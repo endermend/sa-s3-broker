@@ -1,0 +1,46 @@
+FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim AS builder
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_NO_DEV=1 \
+    UV_PYTHON_DOWNLOADS=0
+
+WORKDIR /app
+
+# 1. Монтируем кэш uv и файлы настроек прямо в RUN (не нужно делать COPY uv.lock ...)
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-install-project --no-dev
+
+COPY . /app
+
+# 2. Финальная синхронизация проекта
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-editable
+
+FROM python:3.14-slim-bookworm
+
+# 3. Флаг --create-home не нужен, если мы переопределяем WORKDIR на /app
+RUN groupadd --system --gid 10000 nonroot \
+    && useradd --system --gid 10000 --uid 10000 nonroot
+
+# 4. Создаем папку /files сразу от лица нужного пользователя (минус лишние RUN chmod/chown)
+RUN mkdir -p /files && chown nonroot:nonroot /files
+
+WORKDIR /app
+
+# 5. Копируем только то, что реально нужно для работы (код + виртуальное окружение)
+COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
+COPY --from=builder --chown=nonroot:nonroot /app/src /app/src
+
+
+# 6. Блок ENV сгруппирован, дубликаты удалены
+ENV PYTHONPATH="/app/src" \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    UPLOAD_DIR="/files"
+
+USER nonroot
+
+CMD ["python", "-m", "sa_s3_broker"]

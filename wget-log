@@ -1,0 +1,7 @@
+--2026-11-12 16:49:02--  https://s3.cloud.ru/private-korolev/incoming/solution.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256
+Loaded CA certificate '/etc/ssl/certs/ca-certificates.crt'
+Resolving s3.cloud.ru (s3.cloud.ru)... 176.109.98.30, 176.109.98.31
+Connecting to s3.cloud.ru (s3.cloud.ru)|176.109.98.30|:443... connected.
+HTTP request sent, awaiting response... 400 Bad Request
+2026-11-12 16:49:09 ERROR 400: Bad Request.
+
