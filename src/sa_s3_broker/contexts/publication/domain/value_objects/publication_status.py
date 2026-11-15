@@ -47,11 +47,11 @@ class PublicationStatus(SingleValueObject):
             DomainError: если не смог преобразовать
 
         """
-        if value == PublicationStatus.PENDING.value:
+        if value == "pending":
             return PublicationStatus.PENDING
-        if value == PublicationStatus.PUBLIC.value:
+        if value == "public":
             return PublicationStatus.PUBLIC
-        if value == PublicationStatus.PRIVATE.value:
+        if value == "private":
             return PublicationStatus.PRIVATE
         raise DomainError
 
