@@ -35,12 +35,32 @@ class PublicationStatus(SingleValueObject):
             return "private"
         raise DomainError
 
+    @classmethod
+    def from_str(cls, value: str) -> PublicationStatus:
+        """
+        Преобразует из строки.
+
+        Returns:
+            PublicationStatus
+
+        Raises:
+            DomainError: если не смог преобразовать
+
+        """
+        if value == PublicationStatus.PENDING.value:
+            return PublicationStatus.PENDING
+        if value == PublicationStatus.PUBLIC.value:
+            return PublicationStatus.PUBLIC
+        if value == PublicationStatus.PRIVATE.value:
+            return PublicationStatus.PRIVATE
+        raise DomainError
+
     def to_val(self) -> int:
         """
         Преобразует в число.
 
         Returns:
-            UserStatusType
+            int
 
         Raises:
             DomainError: если не смог преобразовать
@@ -57,10 +77,10 @@ class PublicationStatus(SingleValueObject):
     @classmethod
     def from_val(cls, value: int) -> PublicationStatus:
         """
-        Преобразует в число.
+        Преобразует из числа.
 
         Returns:
-            UserStatusType
+            PublicationStatus
 
         Raises:
             DomainError: если не смог преобразовать

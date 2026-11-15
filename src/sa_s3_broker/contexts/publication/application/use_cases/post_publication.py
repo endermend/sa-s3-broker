@@ -87,7 +87,7 @@ class PostPublicationUseCase:
         await self._arq_pool.enqueue_job(
             "check_expiration_task",
             publication.id.value,
-            PublicationStatus(input_dto.status) == PublicationStatus.PUBLIC,
+            PublicationStatus.from_str(input_dto.status) == PublicationStatus.PUBLIC,
             _defer_by=expires_in + timedelta(minutes=1),
         )
 
