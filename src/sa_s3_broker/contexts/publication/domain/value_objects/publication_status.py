@@ -1,100 +1,23 @@
-from typing import ClassVar
+from enum import IntEnum
+from typing import cast
 
 from sa_s3_broker.contexts.publication.domain.types import PublicationStatusType
 from sa_s3_broker.shared.domain.exceptions import DomainError
-from sa_s3_broker.shared.domain.value_objects.single_value_object import (
-    SingleValueObject,
-)
 
 
-class PublicationStatus(SingleValueObject):
+class PublicationStatus(IntEnum):
     """Value object статуса пользователя."""
 
-    value: int
-
-    PENDING: ClassVar[PublicationStatus]
-    PUBLIC: ClassVar[PublicationStatus]
-    PRIVATE: ClassVar[PublicationStatus]
+    PENDING = 0
+    PUBLIC = 1
+    PRIVATE = 2
 
     def to_str(self) -> PublicationStatusType:
-        """
-        Преобразует в строку.
-
-        Returns:
-            UserStatusType
-
-        Raises:
-            DomainError: если не смог преобразовать
-
-        """
-        if self.value == PublicationStatus.PENDING.value:
-            return "pending"
-        if self.value == PublicationStatus.PUBLIC.value:
-            return "public"
-        if self.value == PublicationStatus.PRIVATE.value:
-            return "private"
-        raise DomainError
+        return cast("PublicationStatusType", self.name.lower())
 
     @classmethod
     def from_str(cls, value: str) -> PublicationStatus:
-        """
-        Преобразует из строки.
-
-        Returns:
-            PublicationStatus
-
-        Raises:
-            DomainError: если не смог преобразовать
-
-        """
-        if value == "pending":
-            return PublicationStatus.PENDING
-        if value == "public":
-            return PublicationStatus.PUBLIC
-        if value == "private":
-            return PublicationStatus.PRIVATE
-        raise DomainError
-
-    def to_val(self) -> int:
-        """
-        Преобразует в число.
-
-        Returns:
-            int
-
-        Raises:
-            DomainError: если не смог преобразовать
-
-        """
-        if self.value == PublicationStatus.PENDING.value:
-            return 0
-        if self.value == PublicationStatus.PUBLIC.value:
-            return 1
-        if self.value == PublicationStatus.PRIVATE.value:
-            return 2
-        raise DomainError
-
-    @classmethod
-    def from_val(cls, value: int) -> PublicationStatus:
-        """
-        Преобразует из числа.
-
-        Returns:
-            PublicationStatus
-
-        Raises:
-            DomainError: если не смог преобразовать
-
-        """
-        if value == 0:
-            return PublicationStatus.PENDING;
-        if value == 1:
-            return PublicationStatus.PUBLIC
-        if value == 2:
-            return PublicationStatus.PRIVATE
-        raise DomainError
-
-
-PublicationStatus.PENDING = PublicationStatus(0)
-PublicationStatus.PUBLIC = PublicationStatus(1)
-PublicationStatus.PRIVATE = PublicationStatus(2)
+        try:
+            return cls[value.upper()]
+        except KeyError:
+            raise DomainError(f"Invalid PublicationStatus string: {value}")
