@@ -25,6 +25,9 @@ services:
 
       APP__PORT: ${APP__PORT}
       APP__ENV: ${APP__ENV}
+    cpus: "1.0"
+    pids_limit: 100
+    oom_score_adj: 500
 
     depends_on:
       database:
@@ -51,6 +54,7 @@ services:
       retries: 10
       start_period: 10s
     restart: unless-stopped
+    oom_score_adj: -500
 
   redis:
     image: redis:7-alpine
