@@ -34,7 +34,7 @@ class PublicationRepository(IPublicationRepository):
             updated_at=publication.updated_at,
             topic_id=publication.topic_id.value,
             name=publication.name,
-            status=publication.status.to_val(),
+            status=publication.status.value,
         )
         await self._session.merge(publication_orm)
         await self._session.commit()
@@ -50,7 +50,7 @@ class PublicationRepository(IPublicationRepository):
             id=PublicationID(publication_orm.id),
             topic_id=TopicID(publication_orm.topic_id),
             name=publication_orm.name,
-            status=PublicationStatus.from_val(publication_orm.status),
+            status=PublicationStatus(publication_orm.status),
             created_at=publication_orm.created_at,
             updated_at=publication_orm.updated_at,
         )
@@ -65,7 +65,7 @@ class PublicationRepository(IPublicationRepository):
 
         if not get_private:
             stmt = stmt.where(
-                PublicationORMModel.status == PublicationStatus.PUBLIC.to_val()
+                PublicationORMModel.status == PublicationStatus.PUBLIC.value
             )
 
         result = await self._session.execute(stmt)
@@ -75,7 +75,7 @@ class PublicationRepository(IPublicationRepository):
                 id=PublicationID(publication_orm.id),
                 topic_id=TopicID(publication_orm.topic_id),
                 name=publication_orm.name,
-                status=PublicationStatus.from_val(publication_orm.status),
+                status=PublicationStatus(publication_orm.status),
                 created_at=publication_orm.created_at,
                 updated_at=publication_orm.updated_at,
             )
